@@ -7,8 +7,7 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // ---- API Functions ----
 
-const API_URL = "/api";
-
+const API_URL = "https://ai-procto-backend.onrender.com/api";
 const getAuthHeaders = () => {
   const token = localStorage.getItem("proctor_token");
   const isValidToken = token && token !== "undefined" && token !== "null" && token.trim() !== "";
