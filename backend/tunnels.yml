@@ -1,0 +1,9 @@
+version: "2"
+authtoken: [ngrok config add-authtoken 3AbtZyLDWPkupE1bB9air8k1Vee_VUgPPLkFYLmgNvvR1ZBd]
+tunnels:
+  frontend:
+    addr: 8080
+    proto: http
+  backend:
+    addr: 5000
+    proto: http
