@@ -1,12 +1,11 @@
 import { ViolationTracker } from "./ViolationTracker";
 import { ScreenshotService } from "./ScreenshotService";
-import * as mpFaceDetection from "@mediapipe/face_detection";
-import * as mpFaceMesh from "@mediapipe/face_mesh";
 
-type DetectionResults = mpFaceDetection.Results;
-type MeshResults = mpFaceMesh.Results;
-type FaceDetection = mpFaceDetection.FaceDetection;
-type FaceMesh = mpFaceMesh.FaceMesh;
+// Note: We use global constructors from index.html scripts for production stability
+type DetectionResults = any;
+type MeshResults = any;
+type FaceDetection = any;
+type FaceMesh = any;
 
 /**
  * Hook for Face and Gaze Detection using MediaPipe FaceDetection and FaceMesh.
@@ -33,26 +32,17 @@ export class FaceMonitor {
         this.isRunning = true;
 
         if (!this.faceDetection) {
-            console.log("[FaceMonitor] Loading MediaPipe FaceDetection...");
+            console.log("[FaceMonitor] Initializing MediaPipe FaceDetection from global scope...");
             
-            // Ultra-resilient constructor resolution
-            let FaceDetectionConstructor: any = (mpFaceDetection as any).FaceDetection || 
-                                                (mpFaceDetection as any).default?.FaceDetection || 
-                                                mpFaceDetection || 
-                                                (window as any).FaceDetection;
+            // Use the global FaceDetection if available (from index.html script tags)
+            const GlobalFaceDetection = (window as any).FaceDetection;
             
-            if (typeof FaceDetectionConstructor !== "function") {
-                // If it's an object containing the class (common in some bundles)
-                const possible = FaceDetectionConstructor.FaceDetection || FaceDetectionConstructor.default;
-                if (typeof possible === "function") FaceDetectionConstructor = possible;
-            }
-
-            if (typeof FaceDetectionConstructor !== "function") {
-                console.error("[FaceMonitor] All FaceDetection constructor lookups failed.");
-                throw new Error("FaceDetection is not a constructor");
+            if (!GlobalFaceDetection) {
+                console.error("[FaceMonitor] FaceDetection global not found. Ensure script tags in index.html are correct.");
+                throw new Error("FaceDetection global not found");
             }
             
-            this.faceDetection = new FaceDetectionConstructor({
+            this.faceDetection = new GlobalFaceDetection({
                 locateFile: (file: string) => {
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/${file}`;
                 }
@@ -68,24 +58,15 @@ export class FaceMonitor {
         }
 
         if (!this.faceMesh) {
-            console.log("[FaceMonitor] Loading MediaPipe FaceMesh...");
+            console.log("[FaceMonitor] Initializing MediaPipe FaceMesh from global scope...");
             
-            // Ultra-resilient constructor resolution
-            let FaceMeshConstructor: any = (mpFaceMesh as any).FaceMesh || 
-                                           (mpFaceMesh as any).default?.FaceMesh || 
-                                           mpFaceMesh || 
-                                           (window as any).FaceMesh;
-            
-            if (typeof FaceMeshConstructor !== "function") {
-                const possible = FaceMeshConstructor.FaceMesh || FaceMeshConstructor.default;
-                if (typeof possible === "function") FaceMeshConstructor = possible;
-            }
-
-            if (typeof FaceMeshConstructor !== "function") {
-                throw new Error("FaceMesh is not a constructor");
+            const GlobalFaceMesh = (window as any).FaceMesh;
+            if (!GlobalFaceMesh) {
+                console.error("[FaceMonitor] FaceMesh global not found.");
+                throw new Error("FaceMesh global not found");
             }
             
-            this.faceMesh = new FaceMeshConstructor({
+            this.faceMesh = new GlobalFaceMesh({
                 locateFile: (file: string) => {
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`;
                 }
