@@ -17,7 +17,7 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # FIXED CORS CONFIGURATION
+   
     # This allows your main domain AND any Vercel preview/deployment domains
     CORS(
         app,

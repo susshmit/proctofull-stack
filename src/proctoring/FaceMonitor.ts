@@ -31,7 +31,8 @@ export class FaceMonitor {
             console.log("[FaceMonitor] Loading MediaPipe FaceDetection...");
             this.faceDetection = new FaceDetection({
                 locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
+                    // Pin to specific version from package.json
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/${file}`;
                 }
             });
 
@@ -48,7 +49,8 @@ export class FaceMonitor {
             console.log("[FaceMonitor] Loading MediaPipe FaceMesh...");
             this.faceMesh = new FaceMesh({
                 locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                    // Pin to specific version from package.json
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`;
                 }
             });
 
@@ -157,13 +159,13 @@ export class FaceMonitor {
                 );
                 this.consecutiveNoFace = 0; // Reset after violation
             }
-        }
-        // EXACTLY 1 FACE: Proceed to Gaze Tracking
-        else if (facesDetected === 1) {
+        } else if (facesDetected === 1) {
             this.consecutiveNoFace = 0; // Reset no face counter
+            if (this.currentFrameId % 60 === 0) console.log("[FaceMonitor] 1 Face detected. Proceeding to gaze check.");
 
             try {
                 if (this.faceMesh) {
+                    if (frameId % 60 === 0) console.log("[FaceMonitor] Running FaceMesh inference...");
                     await this.faceMesh.send({ image: this.videoElement });
                 }
             } catch (err) {
@@ -196,6 +198,7 @@ export class FaceMonitor {
                 const isLookingAway = Math.abs(turnRatio - 0.5) > 0.3;
 
                 if (isLookingAway) {
+                    console.warn(`[FaceMonitor] Gaze deviation detected (ratio: ${turnRatio.toFixed(2)})`);
                     this.consecutiveAways++;
                     // If looking away > 4 seconds (i.e., at least 3 consecutive 2-second ticks == 6 seconds)
                     if (this.consecutiveAways >= 3) {

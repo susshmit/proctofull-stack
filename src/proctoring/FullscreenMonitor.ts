@@ -34,7 +34,11 @@ export class FullscreenMonitor {
         this.isMonitoring = true;
 
         // We attempt to enter fullscreen immediately when monitoring starts
-        this.enterFullscreen().catch(() => { });
+        this.enterFullscreen().then(() => {
+            console.log("[FullscreenMonitor] Fullscreen requested and monitor active.");
+        }).catch(() => {
+            console.warn("[FullscreenMonitor] Fullscreen request failed (User gesture required).");
+        });
 
         document.addEventListener("fullscreenchange", this.boundHandler);
     }

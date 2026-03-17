@@ -39,22 +39,34 @@ export class ObjectDetectionHook {
         if (!this.model) {
             if (DEBUG_AI) console.log("[ObjectDetectionHook] Loading model...");
             try {
-                tf.enableProdMode();
-                tf.env().set('WEBGL_PACK', true);
-                await tf.setBackend('webgl');
-                await tf.ready();
+                // Set a timeout for model loading
+                const loadPromise = (async () => {
+                    tf.enableProdMode();
+                    tf.env().set('WEBGL_PACK', true);
+                    await tf.setBackend('webgl');
+                    await tf.ready();
 
-                this.model = await cocoSsd.load();
+                    this.model = await cocoSsd.load();
 
-                // Warm up
-                tf.engine().startScope();
-                const dummy = tf.zeros([720, 1280, 3]) as tf.Tensor3D;
-                for (let i = 0; i < 3; i++) {
-                    await this.model.detect(dummy);
-                }
-                tf.engine().endScope();
+                    // Warm up
+                    tf.engine().startScope();
+                    const dummy = tf.zeros([720, 1280, 3]) as tf.Tensor3D;
+                    for (let i = 0; i < 3; i++) {
+                        await this.model.detect(dummy);
+                    }
+                    tf.engine().endScope();
+                    console.log("[ObjectDetectionHook] Model loaded and warmed up.");
+                })();
+
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Model loading timed out")), 15000)
+                );
+
+                await Promise.race([loadPromise, timeoutPromise]);
             } catch (err) {
-                console.error("[ObjectDetectionHook] Failed to load model", err);
+                console.error("[ObjectDetectionHook] Failed to load model:", err);
+                this.isRunning = false; // Disable if failed
+                throw err; // Re-throw for ProctoringManager to catch
             }
         }
 
@@ -156,6 +168,11 @@ export class ObjectDetectionHook {
                 });
             }
 
+            if (validDetections.length > 0) {
+                console.log(`[ObjectMonitor] Detected ${validDetections.length} objects:`, validDetections.map(d => d.class).join(", "));
+            } else if (frameId % 90 === 0) {
+                console.log("[ObjectMonitor] Heartbeat: Scanning for prohibited objects...");
+            }
             this.evalPredictions(validDetections, frameId);
 
         } catch (err) {

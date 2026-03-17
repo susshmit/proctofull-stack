@@ -43,10 +43,18 @@ export class ProctoringManager {
 
         console.log("%c [Proctoring Manager] STARTING AI ENGINE...", "color: green; font-weight: bold; font-size: 14px;");
 
-        // Start Monitors
+        // Start Monitors in Parallel for faster engine startup & fault tolerance
         this.fullscreenMonitor.start();
-        await this.faceMonitor.start();
-        await this.objectMonitor.start();
+        const results = await Promise.allSettled([
+            this.faceMonitor.start(),
+            this.objectMonitor.start()
+        ]);
+
+        results.forEach((res, idx) => {
+            if (res.status === "rejected") {
+                console.error(`[Proctoring Manager] Monitor ${idx === 0 ? "Face" : "Object"} failed to start:`, res.reason);
+            }
+        });
 
         document.addEventListener("visibilitychange", this.boundVisibilityHandler);
 
