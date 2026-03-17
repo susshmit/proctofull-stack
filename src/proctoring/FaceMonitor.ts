@@ -1,7 +1,12 @@
 import { ViolationTracker } from "./ViolationTracker";
 import { ScreenshotService } from "./ScreenshotService";
-import { FaceDetection, Results as DetectionResults } from "@mediapipe/face_detection";
-import { FaceMesh, Results as MeshResults } from "@mediapipe/face_mesh";
+import * as mpFaceDetection from "@mediapipe/face_detection";
+import * as mpFaceMesh from "@mediapipe/face_mesh";
+
+type DetectionResults = mpFaceDetection.Results;
+type MeshResults = mpFaceMesh.Results;
+type FaceDetection = mpFaceDetection.FaceDetection;
+type FaceMesh = mpFaceMesh.FaceMesh;
 
 /**
  * Hook for Face and Gaze Detection using MediaPipe FaceDetection and FaceMesh.
@@ -30,23 +35,21 @@ export class FaceMonitor {
         if (!this.faceDetection) {
             console.log("[FaceMonitor] Loading MediaPipe FaceDetection...");
             
-            // Ultra-resilient constructor resolution for production builds
-            let FaceDetectionConstructor: any;
-            const mpFD = FaceDetection as any;
+            // Ultra-resilient constructor resolution
+            let FaceDetectionConstructor: any = (mpFaceDetection as any).FaceDetection || 
+                                                (mpFaceDetection as any).default?.FaceDetection || 
+                                                mpFaceDetection || 
+                                                (window as any).FaceDetection;
             
-            if (mpFD.FaceDetection) {
-                FaceDetectionConstructor = mpFD.FaceDetection;
-            } else if (typeof mpFD === "function" && mpFD.prototype && mpFD.prototype.constructor === mpFD) {
-                FaceDetectionConstructor = mpFD;
-            } else if ((window as any).FaceDetection) {
-                FaceDetectionConstructor = (window as any).FaceDetection;
-            } else {
-                // Last ditch effort: if it's a module with a default export that is the class
-                FaceDetectionConstructor = mpFD.default || mpFD;
+            if (typeof FaceDetectionConstructor !== "function") {
+                // If it's an object containing the class (common in some bundles)
+                const possible = FaceDetectionConstructor.FaceDetection || FaceDetectionConstructor.default;
+                if (typeof possible === "function") FaceDetectionConstructor = possible;
             }
 
-            if (!FaceDetectionConstructor || typeof FaceDetectionConstructor !== "function") {
-                throw new Error("Could not find FaceDetection constructor. MediaPipe library may have failed to load correctly.");
+            if (typeof FaceDetectionConstructor !== "function") {
+                console.error("[FaceMonitor] All FaceDetection constructor lookups failed.");
+                throw new Error("FaceDetection is not a constructor");
             }
             
             this.faceDetection = new FaceDetectionConstructor({
@@ -67,22 +70,19 @@ export class FaceMonitor {
         if (!this.faceMesh) {
             console.log("[FaceMonitor] Loading MediaPipe FaceMesh...");
             
-            // Ultra-resilient constructor resolution for production builds
-            let FaceMeshConstructor: any;
-            const mpFM = FaceMesh as any;
+            // Ultra-resilient constructor resolution
+            let FaceMeshConstructor: any = (mpFaceMesh as any).FaceMesh || 
+                                           (mpFaceMesh as any).default?.FaceMesh || 
+                                           mpFaceMesh || 
+                                           (window as any).FaceMesh;
             
-            if (mpFM.FaceMesh) {
-                FaceMeshConstructor = mpFM.FaceMesh;
-            } else if (typeof mpFM === "function" && mpFM.prototype && mpFM.prototype.constructor === mpFM) {
-                FaceMeshConstructor = mpFM;
-            } else if ((window as any).FaceMesh) {
-                FaceMeshConstructor = (window as any).FaceMesh;
-            } else {
-                FaceMeshConstructor = mpFM.default || mpFM;
+            if (typeof FaceMeshConstructor !== "function") {
+                const possible = FaceMeshConstructor.FaceMesh || FaceMeshConstructor.default;
+                if (typeof possible === "function") FaceMeshConstructor = possible;
             }
 
-            if (!FaceMeshConstructor || typeof FaceMeshConstructor !== "function") {
-                throw new Error("Could not find FaceMesh constructor.");
+            if (typeof FaceMeshConstructor !== "function") {
+                throw new Error("FaceMesh is not a constructor");
             }
             
             this.faceMesh = new FaceMeshConstructor({
