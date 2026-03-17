@@ -128,8 +128,10 @@ export class ObjectDetectionHook {
 
         tf.engine().startScope();
         try {
-            // Primary Object Detection on the FULL FRAME (No downscaling below what model does internally)
-            const tensor = tf.browser.fromPixels(this.videoElement);
+            // Fix Dtype Mismatch: Cast to int32 explicitly for production models
+            const rawTensor = tf.browser.fromPixels(this.videoElement);
+            const tensor = tf.cast(rawTensor, 'int32');
+            
             const predictions = await this.model.detect(tensor as any);
 
             const persons = predictions.filter(p => p.class === 'person');

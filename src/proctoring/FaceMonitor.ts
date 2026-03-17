@@ -29,8 +29,12 @@ export class FaceMonitor {
 
         if (!this.faceDetection) {
             console.log("[FaceMonitor] Loading MediaPipe FaceDetection...");
-            this.faceDetection = new FaceDetection({
-                locateFile: (file) => {
+            
+            // Fix for "vie.FaceDetection is not a constructor" in production builds
+            const FaceDetectionConstructor = (FaceDetection as any).FaceDetection || FaceDetection;
+            
+            this.faceDetection = new FaceDetectionConstructor({
+                locateFile: (file: string) => {
                     // Pin to specific version from package.json
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/${file}`;
                 }
@@ -47,8 +51,12 @@ export class FaceMonitor {
 
         if (!this.faceMesh) {
             console.log("[FaceMonitor] Loading MediaPipe FaceMesh...");
-            this.faceMesh = new FaceMesh({
-                locateFile: (file) => {
+            
+            // Fix for constructor error in production builds
+            const FaceMeshConstructor = (FaceMesh as any).FaceMesh || FaceMesh;
+            
+            this.faceMesh = new FaceMeshConstructor({
+                locateFile: (file: string) => {
                     // Pin to specific version from package.json
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`;
                 }
