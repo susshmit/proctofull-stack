@@ -30,12 +30,27 @@ export class FaceMonitor {
         if (!this.faceDetection) {
             console.log("[FaceMonitor] Loading MediaPipe FaceDetection...");
             
-            // Fix for constructor errors in production builds (checks module and global window scope)
-            const FaceDetectionConstructor = (FaceDetection as any).FaceDetection || (window as any).FaceDetection || FaceDetection;
+            // Ultra-resilient constructor resolution for production builds
+            let FaceDetectionConstructor: any;
+            const mpFD = FaceDetection as any;
+            
+            if (mpFD.FaceDetection) {
+                FaceDetectionConstructor = mpFD.FaceDetection;
+            } else if (typeof mpFD === "function" && mpFD.prototype && mpFD.prototype.constructor === mpFD) {
+                FaceDetectionConstructor = mpFD;
+            } else if ((window as any).FaceDetection) {
+                FaceDetectionConstructor = (window as any).FaceDetection;
+            } else {
+                // Last ditch effort: if it's a module with a default export that is the class
+                FaceDetectionConstructor = mpFD.default || mpFD;
+            }
+
+            if (!FaceDetectionConstructor || typeof FaceDetectionConstructor !== "function") {
+                throw new Error("Could not find FaceDetection constructor. MediaPipe library may have failed to load correctly.");
+            }
             
             this.faceDetection = new FaceDetectionConstructor({
                 locateFile: (file: string) => {
-                    // Pin to specific version from package.json
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/${file}`;
                 }
             });
@@ -52,12 +67,26 @@ export class FaceMonitor {
         if (!this.faceMesh) {
             console.log("[FaceMonitor] Loading MediaPipe FaceMesh...");
             
-            // Fix for constructor errors in production builds (checks module and global window scope)
-            const FaceMeshConstructor = (FaceMesh as any).FaceMesh || (window as any).FaceMesh || FaceMesh;
+            // Ultra-resilient constructor resolution for production builds
+            let FaceMeshConstructor: any;
+            const mpFM = FaceMesh as any;
+            
+            if (mpFM.FaceMesh) {
+                FaceMeshConstructor = mpFM.FaceMesh;
+            } else if (typeof mpFM === "function" && mpFM.prototype && mpFM.prototype.constructor === mpFM) {
+                FaceMeshConstructor = mpFM;
+            } else if ((window as any).FaceMesh) {
+                FaceMeshConstructor = (window as any).FaceMesh;
+            } else {
+                FaceMeshConstructor = mpFM.default || mpFM;
+            }
+
+            if (!FaceMeshConstructor || typeof FaceMeshConstructor !== "function") {
+                throw new Error("Could not find FaceMesh constructor.");
+            }
             
             this.faceMesh = new FaceMeshConstructor({
                 locateFile: (file: string) => {
-                    // Pin to specific version from package.json
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`;
                 }
             });

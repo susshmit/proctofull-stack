@@ -50,8 +50,8 @@ export class ObjectDetectionHook {
 
                     // Warm up
                     tf.engine().startScope();
-                    // Fix: Explicitly create warmup tensor as int32
-                    const dummy = tf.zeros([720, 1280, 3], 'int32') as tf.Tensor3D;
+                    // Forced cast to int32 for production compatibility
+                    const dummy = tf.zeros([720, 1280, 3], 'int32').toInt() as tf.Tensor3D;
                     for (let i = 0; i < 3; i++) {
                         await this.model.detect(dummy);
                     }
