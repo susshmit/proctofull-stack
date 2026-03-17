@@ -80,6 +80,7 @@ export class ProctoringManager {
     }
 
     public stopProctoring() {
+        if (!this.isRunning) return;
         this.isRunning = false;
         console.log("%c [Proctoring Manager] STOPPING AI ENGINE...", "color: red; font-weight: bold;");
 
@@ -87,6 +88,14 @@ export class ProctoringManager {
         this.faceMonitor.stop();
         this.objectMonitor.stop();
         document.removeEventListener("visibilitychange", this.boundVisibilityHandler);
+    }
+
+    public getFinalReport() {
+        return {
+            score: this.tracker.getIntegrityScore(),
+            metrics: this.tracker.getMetrics(),
+            violations: this.tracker.getViolations()
+        };
     }
 
     private handleWarning(message: string, current: number, max: number) {

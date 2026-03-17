@@ -165,7 +165,7 @@ export class FaceMonitor {
 
             try {
                 if (this.faceMesh) {
-                    if (frameId % 60 === 0) console.log("[FaceMonitor] Running FaceMesh inference...");
+                    if (this.currentFrameId % 60 === 0) console.log("[FaceMonitor] Running FaceMesh inference...");
                     await this.faceMesh.send({ image: this.videoElement });
                 }
             } catch (err) {
