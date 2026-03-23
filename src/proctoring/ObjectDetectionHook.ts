@@ -43,7 +43,12 @@ export class ObjectDetectionHook {
                 const loadPromise = (async () => {
                     tf.enableProdMode();
                     tf.env().set('WEBGL_PACK', true);
-                    await tf.setBackend('webgl');
+                    try {
+                        await tf.setBackend('webgl');
+                    } catch (e) {
+                        console.warn("[ObjectDetectionHook] WebGL backend failed on this device, falling back to CPU", e);
+                        await tf.setBackend('cpu');
+                    }
                     await tf.ready();
 
                     this.model = await cocoSsd.load();

@@ -315,7 +315,7 @@ export default function AdminDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground font-mono">
-                        {new Date(v.timestamp).toLocaleTimeString()}
+                        {new Date((typeof v.timestamp === "string" ? v.timestamp.replace(" ", "T") : v.timestamp)).toLocaleTimeString()}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -358,7 +358,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-4 mt-2 text-xs font-mono text-muted-foreground">
                           <span>answered: {r.answered}/{r.totalQuestions}</span>
                           <span>violations: {r.violations}</span>
-                          <span>{new Date(r.submittedAt).toLocaleString()}</span>
+                          <span>{new Date((typeof r.submittedAt === "string" ? r.submittedAt.replace(" ", "T") : r.submittedAt)).toLocaleString()}</span>
                         </div>
                       </div>
 
@@ -418,7 +418,7 @@ export default function AdminDashboard() {
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground font-mono">
                             <span className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
-                              Created: {new Date(exam.created_at || exam.scheduledAt).toLocaleDateString()}
+                              Created: {new Date(exam.created_at ? exam.created_at.replace(" ", "T") : exam.scheduledAt.replace(" ", "T")).toLocaleDateString()}
                             </span>
                             <span className="flex items-center gap-1">
                               <FileText className="h-3 w-3" />
@@ -794,7 +794,7 @@ export default function AdminDashboard() {
                           onClick={async () => {
                             try {
                               const res = await getServerTime();
-                              setServerTime(new Date(res.utc_time).toLocaleString());
+                              setServerTime(new Date(res.utc_time.replace(" ", "T")).toLocaleString());
                             } catch (error) {
                               setServerTime("Error fetching time");
                             }

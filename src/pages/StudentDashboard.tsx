@@ -84,7 +84,7 @@ export default function StudentDashboard() {
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    <span>{new Date(exam.scheduledAt).toLocaleDateString()}</span>
+                    <span>{new Date(exam.scheduledAt.replace(' ', 'T')).toLocaleDateString()}</span>
                   </div>
                 </div>
 
